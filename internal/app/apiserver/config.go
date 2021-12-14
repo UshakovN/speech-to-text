@@ -1,4 +1,4 @@
-package recognition
+package apiserver
 
 import (
 	"io/ioutil"
@@ -7,14 +7,12 @@ import (
 )
 
 type Config struct {
-	YandexToken       string `yaml:"yandex_token"`
-	RecognitionParams string `yaml:"recognition_params"`
+	BindAddr string `yaml:"bind_addr"`
 }
 
 func NewConfig() *Config {
 	return &Config{
-		YandexToken:       "",
-		RecognitionParams: "",
+		BindAddr: ":8080",
 	}
 }
 

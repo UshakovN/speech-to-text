@@ -1,4 +1,4 @@
-package recognition
+package telegram
 
 import (
 	"io/ioutil"
@@ -7,14 +7,12 @@ import (
 )
 
 type Config struct {
-	YandexToken       string `yaml:"yandex_token"`
-	RecognitionParams string `yaml:"recognition_params"`
+	AccessToken string `yaml:"access_token"`
 }
 
 func NewConfig() *Config {
 	return &Config{
-		YandexToken:       "",
-		RecognitionParams: "",
+		AccessToken: "",
 	}
 }
 

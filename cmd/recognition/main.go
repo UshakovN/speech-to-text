@@ -1,32 +1,38 @@
 package main
 
 import (
-	"io/ioutil"
+	"flag"
 	"log"
 
 	"github.com/UshakovN/speech-to-text/internal/app/recognition"
+	"github.com/UshakovN/speech-to-text/internal/app/telegram"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"gopkg.in/yaml.v2"
 )
 
-func loadConfig() *recognition.Config {
-	config := recognition.NewConfig()
+var (
+	pathconfigRec string
+	pathconfigTg  string
+)
 
-	file, err := ioutil.ReadFile("./configs/main.yaml")
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = yaml.Unmarshal(file, config)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return config
+func init() {
+	flag.StringVar(&pathconfigRec, "yandex-config", "configs/recognition.yaml", "path to")
+	flag.StringVar(&pathconfigTg, "telegram-config", "configs/telegram.yaml", "path to")
 }
 
 func main() {
-	config := loadConfig()
+	flag.Parse()
 
-	telegramBot, err := tgbotapi.NewBotAPI(config.TelegramToken)
+	yandexConfig := recognition.NewConfig()
+	if err := yandexConfig.UnmarshalYaml(pathconfigRec); err != nil {
+		log.Panic(err)
+	}
+
+	telegramConfig := telegram.NewConfig()
+	if err := telegramConfig.UnmarshalYaml(pathconfigTg); err != nil {
+		log.Panic(err)
+	}
+
+	telegramBot, err := tgbotapi.NewBotAPI(telegramConfig.AccessToken)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -47,16 +53,20 @@ func main() {
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, update.Message.Text)
 			telegramBot.Send(msg)
 
-		} else if update.Message.Voice.Duration != 0 {
+		}
+		if update.Message.Voice == nil {
+			continue
+		}
+		if update.Message.Voice.Duration != 0 {
 			log.Printf("Пользователь [@%s], Длительность [%d]", update.Message.From.UserName, update.Message.Voice.Duration)
 			speech, err := telegramBot.GetFileDirectURL(update.Message.Voice.FileID)
 			if err != nil {
-				log.Panic(err)
+				log.Panic(err.Error())
 			}
-			yandexClient := recognition.NewYandexClient(config.YandexToken, config.RecognitionParams)
+			yandexClient := recognition.NewYandexClient(yandexConfig)
 			chunks, err := yandexClient.GetFileChunks(speech)
 			if err != nil {
-				log.Panic(err)
+				log.Panic(err.Error())
 			}
 			transcription := yandexClient.GetTranscription(chunks)
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, transcription)

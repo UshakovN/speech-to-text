@@ -3,6 +3,7 @@ package recognition
 import (
 	"encoding/json"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 )
@@ -18,10 +19,10 @@ type YandexClient struct {
 	response      YandexResponse
 }
 
-func NewYandexClient(token string, params string) *YandexClient {
+func NewYandexClient(config *Config) *YandexClient {
 	return &YandexClient{
-		serviceKey:    token,
-		params:        params,
+		serviceKey:    config.YandexToken,
+		params:        config.RecognitionParams,
 		speechRequest: "https://stt.api.cloud.yandex.net/speech/v1/stt:recognize?",
 		// strings.Join([]string{"topic=general", "lang=ru-RU"}, "&"),
 	}
@@ -51,7 +52,7 @@ func (client *YandexClient) GetTranscription(speechFile io.Reader) string {
 		log.Panic(err)
 	}
 	defer respTranscription.Body.Close()
-	bodyTransription, err := io.ReadAll(respTranscription.Body)
+	bodyTransription, err := ioutil.ReadAll(respTranscription.Body)
 	if err != nil {
 		log.Panic(err)
 	}
