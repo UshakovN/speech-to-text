@@ -1,21 +1,18 @@
-package apiserver
+package store
 
 import (
 	"io/ioutil"
 
-	"github.com/UshakovN/speech-to-text/internal/app/store"
 	"gopkg.in/yaml.v2"
 )
 
 type Config struct {
-	BindAddr string `yaml:"bind_addr"`
-	Store    *store.Config
+	DatabaseUrl string `yaml:"database_url"`
 }
 
 func NewConfig() *Config {
 	return &Config{
-		BindAddr: ":8080",
-		Store:    store.NewConfig(),
+		DatabaseUrl: "",
 	}
 }
 
